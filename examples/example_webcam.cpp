@@ -21,17 +21,8 @@ class VideoCaptureNode final : public NodeInterface {
 
     // todo(will) - handle fetching & adjusting settings...
     void process(MultiImageContextInterface& multi_context) override final {
-        LOG(INFO) << "creating context";
-
-        cv::Mat image;
-        source_.read(image);
-
         auto context = multi_context.cameras("camera");
-        context->result("image") = image.clone();
-
-        LOG(INFO) << "num cameras: " << multi_context.cameras().size();
-
-        LOG(INFO) << "complete!";
+        source_.read(context->image("image"));
     }
 
   private:
@@ -45,19 +36,14 @@ class FrameDiffNode final : public NodeInterface {
 
     void process(MultiImageContextInterface& multi_context) override final {
         for (auto& [cameraName, context] : multi_context.cameras()) {
-            const auto& image = context->result<cv::Mat>("image");
+            const auto& image = context->image("image");
 
             auto previous_image = previous_images_[cameraName];
             if (previous_image.empty()) {
                 previous_image = image;
             }
 
-            cv::Mat diff_image;
-            // this is causing an allocation...
-            cv::absdiff(image, previous_image, diff_image);
-
-            context->result("diff") = diff_image;
-
+            cv::absdiff(image, previous_image, context->image("diff"));
             image.copyTo(previous_images_[cameraName]);
         }
     }
@@ -75,11 +61,11 @@ class DisplayImageNode final : public NodeInterface {
         LOG(INFO) << "displaying frame " << multi_context.frameId();
 
         for (auto& [cameraName, context] : multi_context.cameras()) {
-            for (const auto& imageName : {"image", "diff"}) {
-                cv::imshow(cameraName + " " + imageName, context->result<cv::Mat>(imageName));
-            }
-
-            cv::waitKey(1);
+          context->images([cameraName](const std::string& imageName, cv::Mat& image) {
+            cv::imshow(cameraName + " " + imageName, image);
+          });
+          
+          cv::waitKey(1);
         }
     }
 };
