@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+#include "hastings/helpers/profile_marker.h"
 #include "hastings/pipeline/executors.h"
 
 namespace hastings {
@@ -37,6 +38,8 @@ class Pipeline final : public PipelineInterface {
     };
 
     void start() override final {
+        ProfilerConnection profiler;
+
         std::vector<std::jthread> threads;
         threads.reserve(num_threads_);
 
@@ -47,6 +50,8 @@ class Pipeline final : public PipelineInterface {
                 while (true) {
                     context->clear();
                     context->frameId(frame_id_++);
+
+                    ProfilerFrameMarker marker_frame("frame");
 
                     for (auto& executor : executors_) {
                         executor->process(*context);

@@ -21,11 +21,11 @@ class ImageContext : public ImageContextInterface {
     std::any& result(const std::string& name) override final { return data_[name]; }
 
     cv::Mat& image(const std::string& name) override final { return images_[name]; }
-    
-    void images(const FnImage& fn_image) override final { 
-      for (auto& [name, image]: images_) {
-        fn_image(name, image);
-      }  
+
+    void images(const FnImage& fn_image) override final {
+        for (auto& [name, image] : images_) {
+            fn_image(name, image);
+        }
     }
 
   private:
