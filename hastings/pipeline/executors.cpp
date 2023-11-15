@@ -1,5 +1,7 @@
 #include "hastings/pipeline/executors.h"
 
+#include "hastings/helpers/profile_marker.h"
+
 namespace hastings {
 
 ParallelExecutor::ParallelExecutor(Ptr&& node) : node_(std::move(node)) {
@@ -10,7 +12,10 @@ ParallelExecutor::ParallelExecutor(Ptr&& node) : node_(std::move(node)) {
 
 std::string ParallelExecutor::name() const { return "ParallelExecutor"; }
 
-void ParallelExecutor::process(MultiImageContextInterface& multi_context) { node_->process(multi_context); }
+void ParallelExecutor::process(MultiImageContextInterface& multi_context) {
+    ProfilerFunctionMarker marker(node_->name());
+    node_->process(multi_context);
+}
 
 UnorderedExecutor::UnorderedExecutor(Ptr&& node) : node_(std::move(node)) {
     if (node_->executionPolicy() != ExecutionPolicy::Unordered) {
@@ -22,6 +27,7 @@ std::string UnorderedExecutor::name() const { return "UnorderedExecutor"; }
 
 void UnorderedExecutor::process(MultiImageContextInterface& multi_context) {
     std::lock_guard lock(mutex_);
+    ProfilerFunctionMarker marker(node_->name());
     node_->process(multi_context);
 }
 
@@ -36,9 +42,12 @@ std::string OrderedExecutor::name() const { return "OrderedExecutor"; }
 void OrderedExecutor::process(MultiImageContextInterface& multi_context) {
     std::unique_lock lock(mutex_);
     cv_.wait(lock, [&] { return multi_context.frameId() == frame_id_; });
-    node_->process(multi_context);
 
-    frame_id_ += 1;
+    {
+        ProfilerFunctionMarker marker(node_->name());
+        node_->process(multi_context);
+        frame_id_ += 1;
+    }
 
     lock.unlock();
     cv_.notify_all();

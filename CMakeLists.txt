@@ -10,12 +10,7 @@ include(GoogleTest)
 
 enable_testing()
 
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY    https://github.com/google/googletest.git
-  GIT_TAG           v1.14.0
-)
-FetchContent_MakeAvailable(googletest)
+add_subdirectory(thirdparty)
 
 find_package(GLog       REQUIRED)
 find_package(OpenCV     REQUIRED)
@@ -23,7 +18,7 @@ find_package(OpenCV     REQUIRED)
 file(GLOB_RECURSE       lib_hastings_srcs       hastings/*.cpp)
 add_library(hastings    ${lib_hastings_srcs})
 target_include_directories(hastings PUBLIC .)
-target_link_libraries(hastings glog ${OpenCV_LIBS})
+target_link_libraries(hastings PUBLIC glog ${OpenCV_LIBS} Remotery)
 
 add_subdirectory(examples)
 
@@ -33,6 +28,6 @@ target_link_libraries(test_hastings        GTest::gtest_main hastings)
 
 gtest_discover_tests(test_hastings)
 
-file(GLOB_RECURSE   all_cxx_files   *.cpp *.h)
+file(GLOB_RECURSE   all_cxx_files   hastings/*.cpp hastings/*.h tests/*.cpp tests/*.h)
 find_program(clang_format "clang-format")
 add_custom_target(format COMMAND ${clang_format} -i -style=file ${all_cxx_files})

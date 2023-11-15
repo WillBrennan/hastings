@@ -9,9 +9,9 @@ The framework is highly modular and composable. It has visualization, performanc
 ## To Do List 
 ### Done
 1. add image syntax to context...
+2. add remotery in processors for profiling
 ### Doing 
 ### To Do 
-2. add Optik in processors for profiling
 3. add visualiser 
 4. add draw commands to processors
 5. add settings to processors

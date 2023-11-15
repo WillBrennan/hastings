@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "creating pipeline";
 
-    auto pipeline = createPipeline(1);
+    auto pipeline = createPipeline(5);
 
     pipeline->add<VideoCaptureNode>(0);
     pipeline->add<FrameDiffNode>();

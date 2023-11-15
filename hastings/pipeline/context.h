@@ -1,13 +1,12 @@
 #pragma once
 
 #include <any>
+#include <functional>
 #include <memory>
+#include <opencv2/core.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
-#include <functional>
-
-#include <opencv2/core.hpp>
 
 namespace hastings {
 class ImageContextInterface {
