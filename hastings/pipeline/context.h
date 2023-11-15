@@ -5,11 +5,15 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <functional>
+
+#include <opencv2/core.hpp>
 
 namespace hastings {
 class ImageContextInterface {
   public:
     using Ptr = std::unique_ptr<ImageContextInterface>;
+    using FnImage = std::function<void(const std::string&, cv::Mat& image)>;
 
     ImageContextInterface() = default;
     virtual ~ImageContextInterface() = default;
@@ -23,6 +27,9 @@ class ImageContextInterface {
     virtual std::size_t frameId() const = 0;
 
     virtual std::any& result(const std::string& name) = 0;
+
+    virtual cv::Mat& image(const std::string& name) = 0;
+    virtual void images(const FnImage& fn_image) = 0;
 
     template <class T>
     T& result(const std::string& name) {

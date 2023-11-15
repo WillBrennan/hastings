@@ -18,12 +18,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 find_package(GLog       REQUIRED)
-
+find_package(OpenCV     REQUIRED)
 
 file(GLOB_RECURSE       lib_hastings_srcs       hastings/*.cpp)
 add_library(hastings    ${lib_hastings_srcs})
 target_include_directories(hastings PUBLIC .)
-target_link_libraries(hastings glog)
+target_link_libraries(hastings glog ${OpenCV_LIBS})
 
 add_subdirectory(examples)
 

@@ -20,10 +20,19 @@ class ImageContext : public ImageContextInterface {
 
     std::any& result(const std::string& name) override final { return data_[name]; }
 
+    cv::Mat& image(const std::string& name) override final { return images_[name]; }
+    
+    void images(const FnImage& fn_image) override final { 
+      for (auto& [name, image]: images_) {
+        fn_image(name, image);
+      }  
+    }
+
   private:
     std::size_t time_;
     std::size_t id_;
     std::map<std::string, std::any> data_;
+    std::map<std::string, cv::Mat> images_;
 };
 
 class MultiImageContext final : public MultiImageContextInterface {
@@ -49,6 +58,10 @@ class MultiImageContext final : public MultiImageContextInterface {
     std::size_t frameId() const override final { return context_.frameId(); };
 
     std::any& result(const std::string& name) override final { return context_.result(name); }
+
+    cv::Mat& image(const std::string& name) override final { return context_.image(name); }
+
+    void images(const FnImage& fn_image) override final { context_.images(fn_image); }
 
   private:
     Cameras cameras_;
