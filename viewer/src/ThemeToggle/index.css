@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+.toggle {
+  @apply 
+  flex flex-row gap-3 items-center
+}
+
+.toggle-switch {
+  @apply 
+  px-2 py-2 
+  rounded-full
+}
+
+.light {
+  @apply 
+  bg-blue-500 hover:bg-blue-600;
+}
+
+.dark {
+  @apply 
+  bg-gray-300 hover:bg-gray-200
+}
+
+.toggle > h3 {
+  @apply 
+  font-bold
+}
+}
