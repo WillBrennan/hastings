@@ -10,15 +10,15 @@ include(GoogleTest)
 
 enable_testing()
 
+find_package(GLog           REQUIRED)
+find_package(OpenCV         REQUIRED)
+find_package(Boost          REQUIRED COMPONENTS filesystem system thread regex)
 add_subdirectory(thirdparty)
-
-find_package(GLog       REQUIRED)
-find_package(OpenCV     REQUIRED)
 
 file(GLOB_RECURSE       lib_hastings_srcs       hastings/*.cpp)
 add_library(hastings    ${lib_hastings_srcs})
 target_include_directories(hastings PUBLIC .)
-target_link_libraries(hastings PUBLIC glog ${OpenCV_LIBS} Remotery)
+target_link_libraries(hastings PUBLIC glog ${OpenCV_LIBS} ${Boost_LIBRARIES} Remotery nlohmann_json::nlohmann_json)
 
 add_subdirectory(examples)
 

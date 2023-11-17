@@ -11,9 +11,9 @@ The framework is highly modular and composable. It has visualization, performanc
 1. add image syntax to context...
 2. add remotery in processors for profiling
 ### Doing 
-### To Do 
 3. add visualiser 
+### To Do  
 4. add draw commands to processors
 5. add settings to processors
-6. add in-band signaling / serialization 
+6. add in-band signaling / serialization
 7. add support for CUDA / ML Inference
