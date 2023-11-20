@@ -1,5 +1,6 @@
 import React from 'react';
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
+import { Context } from '../context';
 
 import "./index.css";
 
@@ -24,8 +25,7 @@ function useDarkSide(): [boolean, () => void] {
     return [isDark, toggleTheme];
 }
 
-
-export default function ThemeToggle() {
+function ThemeToggle() {
     const [isDark, toggleTheme] = useDarkSide();
   
     return (
@@ -37,4 +37,36 @@ export default function ThemeToggle() {
             />        
         </div>
     );
+}
+
+function HostSetting () {
+    const {host, updateHost} = React.useContext(Context);
+    const [statefulHost, setHost] = React.useState<string>(host);
+
+    const fnChangeHost = () => {
+        updateHost(statefulHost);
+    };
+
+    return (
+        <div className="relative">
+            <input 
+                type="text" id="hostBar" placeholder="Connection Address" 
+                required value={statefulHost} onChange={e => setHost(e.currentTarget.value)}
+            />
+            <button type="submit" id="hostButton" onClick={fnChangeHost}>Connect</button>
+        </div>
+    );
+}
+
+
+export default function ViewerSettings() {
+    
+  
+    return (
+      <div className="flex flex-col gap-4">
+        <HostSetting/>
+        <ThemeToggle/>
+      </div>
+    )
   }
+  

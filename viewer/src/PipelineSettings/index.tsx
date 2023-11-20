@@ -1,4 +1,4 @@
-export default function Settings(props: {hostname: string}) {
+export default function PipelineSettings(props: {hostname: string}) {
     return (
         <div>
             Settings Thing! 
