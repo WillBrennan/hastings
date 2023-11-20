@@ -8,6 +8,7 @@
 #include "hastings/pipeline/context.h"
 #include "hastings/pipeline/node.h"
 #include "hastings/pipeline/pipeline.h"
+#include "hastings/pipeline/visualizer.h"
 
 namespace hastings {
 class VideoCaptureNode final : public NodeInterface {
@@ -58,8 +59,6 @@ class DisplayImageNode final : public NodeInterface {
     std::string name() const override final { return "DisplayImageNode"; }
 
     void process(MultiImageContextInterface& multi_context) override final {
-        LOG(INFO) << "displaying frame " << multi_context.frameId();
-
         for (auto& [cameraName, context] : multi_context.cameras()) {
           context->images([cameraName](const std::string& imageName, cv::Mat& image) {
             cv::imshow(cameraName + " " + imageName, image);
@@ -77,6 +76,7 @@ int main(int argc, char** argv) {
     using hastings::DisplayImageNode;
     using hastings::FrameDiffNode;
     using hastings::VideoCaptureNode;
+    using hastings::VisualizerStreamerNode;
 
     google::InitGoogleLogging(argv[0]);
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -87,7 +87,8 @@ int main(int argc, char** argv) {
 
     pipeline->add<VideoCaptureNode>(0);
     pipeline->add<FrameDiffNode>();
-    pipeline->add<DisplayImageNode>();
+    // pipeline->add<DisplayImageNode>();
+    pipeline->add<VisualizerStreamerNode>();
 
     LOG(INFO) << "starting pipeline";
     pipeline->start();

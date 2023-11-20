@@ -28,6 +28,12 @@ class ImageContext : public ImageContextInterface {
         }
     }
 
+    void images(const FnConstImage& fn_image) const override final {
+        for (auto& [name, image] : images_) {
+            fn_image(name, image);
+        }
+    }
+
   private:
     std::size_t time_;
     std::size_t id_;
@@ -37,7 +43,7 @@ class ImageContext : public ImageContextInterface {
 
 class MultiImageContext final : public MultiImageContextInterface {
   public:
-    const Cameras& cameras() override final { return cameras_; }
+    const Cameras& cameras() const override final { return cameras_; }
 
     ImageContextInterface* cameras(const std::string& name) override final {
         auto iter = std::find_if(cameras_.begin(), cameras_.end(), [&name](const Camera& camera) { return std::get<0>(camera) == name; });
@@ -62,6 +68,8 @@ class MultiImageContext final : public MultiImageContextInterface {
     cv::Mat& image(const std::string& name) override final { return context_.image(name); }
 
     void images(const FnImage& fn_image) override final { context_.images(fn_image); }
+
+    void images(const FnConstImage& fn_image) const override final { context_.images(fn_image); }
 
   private:
     Cameras cameras_;

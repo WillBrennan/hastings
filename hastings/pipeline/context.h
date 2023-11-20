@@ -13,6 +13,7 @@ class ImageContextInterface {
   public:
     using Ptr = std::unique_ptr<ImageContextInterface>;
     using FnImage = std::function<void(const std::string&, cv::Mat& image)>;
+    using FnConstImage = std::function<void(const std::string&, const cv::Mat& image)>;
 
     ImageContextInterface() = default;
     virtual ~ImageContextInterface() = default;
@@ -29,6 +30,7 @@ class ImageContextInterface {
 
     virtual cv::Mat& image(const std::string& name) = 0;
     virtual void images(const FnImage& fn_image) = 0;
+    virtual void images(const FnConstImage& fn_image) const = 0;
 
     template <class T>
     T& result(const std::string& name) {
@@ -46,7 +48,7 @@ class MultiImageContextInterface : public ImageContextInterface {
     virtual ~MultiImageContextInterface() = default;
 
     virtual ImageContextInterface* cameras(const std::string& name) = 0;
-    virtual const Cameras& cameras() = 0;
+    virtual const Cameras& cameras() const = 0;
 };
 
 ImageContextInterface::Ptr createImageContext();

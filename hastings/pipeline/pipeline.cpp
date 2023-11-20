@@ -51,7 +51,7 @@ class Pipeline final : public PipelineInterface {
                     context->clear();
                     context->frameId(frame_id_++);
 
-                    ProfilerFrameMarker marker_frame("frame");
+                    ProfilerFunctionMarker marker_frame("frame");
 
                     for (auto& executor : executors_) {
                         executor->process(*context);

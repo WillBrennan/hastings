@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .app {
+    @apply 
+    flex flex-row min-h-screen
+    text-slate-700 dark:text-slate-400
+    bg-white dark:bg-slate-900
+    duration-300 
+  }
+
+  .background {
+    @apply
+    fixed h-screen w-full z-0
+    bg-gradient-to-br 
+    from-white via-slate-200 to-white
+    dark:from-slate-600 dark:via-gray-800 dark:to-slate-600
+  }
+
+  .sidebar {
+    @apply 
+    w-96 min-h-screen p-5
+    flex flex-col gap-3
+    z-30
+  }
+
+  .main-window {
+    @apply 
+    min-h-screen p-5
+    flex flex-col gap-3
+    z-30
+  }
+}
