@@ -17,12 +17,12 @@ function App() {
             <ViewerSettings/>
           </ThemeComponent>
           <ThemeComponent title={"Pipeline Settings"}>
-            <PipelineSettings hostname={"localhost"}/>
+            <PipelineSettings/>
           </ThemeComponent>
         </div>
         <div className="main-window">
           <ThemeComponent title={"Video Streams"}>
-            <ImageViewer hostname={"localhost"}/>
+            <ImageViewer/>
           </ThemeComponent>
           <ThemeComponent title={"Event Stream"}>
             Timeline 

@@ -24,6 +24,10 @@ class VideoCaptureNode final : public NodeInterface {
     void process(MultiImageContextInterface& multi_context) override final {
         auto context = multi_context.cameras("camera");
         source_.read(context->image("image"));
+
+        auto other_context = multi_context.cameras("dummy camera");
+        context->image("image").copyTo(other_context->image("image"));
+        cv::flip(other_context->image("image"), other_context->image("dummy image"), 0);
     }
 
   private:
