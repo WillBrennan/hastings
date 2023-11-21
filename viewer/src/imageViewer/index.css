@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+.videoStream {}   
+
+.tabs {
+    @apply 
+    flex flex-row gap-3
+    select-none
+}
+
+.tabs > li {
+    @apply 
+    px-4 py-2
+    text-slate-800
+}
+
+.cameraTabs > li {
+    @apply 
+    bg-slate-100 hover:bg-slate-300
+    border rounded-t-lg border-slate-300 hover:border-slate-400
+}
+
+.imageTabs {
+    @apply 
+    bg-slate-200
+    rounded-b-lg overflow-hidden p-2
+}
+
+.imageTabs > li {
+    @apply 
+    bg-slate-100 hover:bg-slate-300
+    border rounded-lg border-slate-300 hover:border-slate-400
+    duration-300
+}
+
+.active {
+    @apply 
+    !bg-red-300
+}
+}
