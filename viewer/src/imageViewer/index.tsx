@@ -1,98 +1,79 @@
 import React from 'react';
-import * as msgpack from "@msgpack/msgpack";
 
 import { Context } from '../context';
+import { VisualizerWebSocket, Cameras, StreamConfig } from './websocket';
 
 import "./index.css";
+
 interface State {
-  cameras: string[],
-  images: string[],
-  currentCamera: string | null,
-  currentImage: string | null,
+  cameras: Record<string, string[]>,
+  selected: { camera: string, image: string | null } | null;
+  current: StreamConfig | null;
 };
 
 function ImageViewer() {
   const { host } = React.useContext(Context);
+  const [state, setState] = React.useState<State>({cameras: {}, selected: null, current: null});
 
-  const [state, setState] = React.useState<State | null>(null);
   const imageRef = React.useRef<HTMLImageElement | null>(null);
+  const websocketRef = React.useRef<VisualizerWebSocket | null>(null);
 
-  const fnConnectWebSocket = React.useCallback(() => {
-    const socket = new WebSocket(host + ":8080");
-    socket.binaryType = 'arraybuffer';
-
-    console.log(`creating new websocket`);
-
-    socket.addEventListener('open', (event) => {
-      console.log('WebSocket connection opened:', event);
+  const cameraCallback = React.useCallback((cameras: Cameras, config: StreamConfig) => {
+    setState((prev) => {
+      const selected = prev.selected || config;
+      return {
+        cameras: cameras, 
+        current: config,
+        selected: selected,
+      }
     });
+  }, []);
 
-    socket.addEventListener('message', (event) => {
-      const data = new Uint8Array(event.data);
-      const msg = msgpack.decode(data) as any;
+  const SelectStreamCallback = React.useCallback((camera: string, image: string | null) => {
+    if (image && websocketRef.current) {
+      websocketRef.current.setImageStream(camera, image);
+    }
 
-      setState((prev) => {
-        const cameras = Object.keys(msg["cameras"]);
-        const currentCamera = prev?.currentCamera || cameras.at(0) || null;
-        let images: string[] = [];
-
-        if (currentCamera) {
-          images = Object.keys(msg["cameras"][currentCamera]["images"]);
-        }
-
-        const currentImage = prev?.currentImage || images.at(0) || null;
-
-        if (currentCamera && currentImage && imageRef.current) {
-          const imageData = msg["cameras"][currentCamera]["images"][currentImage];
-          const imageBlob = new Blob([imageData], { type: 'image/bmp' });
-          imageRef.current.src = URL.createObjectURL(imageBlob);
-        }
-
-        return {
-          cameras,
-          images,
-          currentCamera,
-          currentImage,
-        };
-      });
-    });
-
-    return () => {
-      socket.close();
-    };
-  }, [host, imageRef]);
+    setState({...state, selected: {camera, image}});
+  },[state]);
 
   React.useEffect(() => {
-    const cleanupWebSocket = fnConnectWebSocket();
-    return cleanupWebSocket;
-  }, [fnConnectWebSocket]);
+    websocketRef.current = new VisualizerWebSocket(host, imageRef, cameraCallback);
 
+    return () => {
+      if (websocketRef.current) {
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    }
+  }, [host, imageRef, cameraCallback]);
 
-  if (state == null) {
+  if (!state.current || !state.selected) {
     return <div />
   }
 
-  const cameraTabs = state.cameras.map((camera, idx) => 
+  const selectedCamera = state.selected.camera;
+  const selectedImage = state.selected.image;
+
+  const cameraTabs = Object.keys(state.cameras).map((camera, idx) => 
     <li 
       key={idx} 
-      className={camera === state.currentCamera ? "active" : ""}
-      onClick={() => setState({...state, currentCamera: camera})}
+      className={camera === selectedCamera ? "active" : ""}
+      onClick={() => SelectStreamCallback(camera, null)}
     >
       {camera}
     </li>
   );
 
-  const imageTabs = state.images.map((image, idx) => 
+  const imageTabs = state.cameras[state.selected.camera].map((image, idx) => 
     <li 
       key={idx} 
-      className={image === state.currentImage ? "active" : ""}
-      onClick={() => setState({...state, currentImage: image})}
+      className={image === selectedImage ? "active" : ""}
+      onClick={() => SelectStreamCallback(selectedCamera, image)}
     >
       {image}
     </li>
   );
-
-
 
   return (
     <div className="flex flex-col">
