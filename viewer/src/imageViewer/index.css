@@ -3,8 +3,6 @@
 @tailwind utilities;
 
 @layer components {
-.videoStream {}   
-
 .tabs {
     @apply 
     flex flex-row gap-3
@@ -39,5 +37,11 @@
 .active {
     @apply 
     !bg-red-300
+}
+
+.imageStream {
+    height: 60vh;
+    min-width: 60vw;
+    background-color:rgb(128, 128, 128);
 }
 }

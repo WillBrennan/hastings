@@ -15,7 +15,7 @@
     @apply
     fixed h-screen w-full z-0
     bg-gradient-to-br 
-    from-white via-slate-200 to-white
+    from-white via-slate-300 to-white
     dark:from-slate-600 dark:via-gray-800 dark:to-slate-600
   }
 
@@ -31,5 +31,14 @@
     min-h-screen p-5
     flex flex-col gap-3
     z-30
+  }
+
+  .theme-button {
+    @apply         
+    text-white font-medium text-sm 
+    rounded-lg px-4 py-1
+
+    bg-blue-600 hover:bg-blue-800 
+    duration-300
   }
 }

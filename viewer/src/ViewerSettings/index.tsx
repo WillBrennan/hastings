@@ -53,7 +53,7 @@ function HostSetting () {
                 type="text" id="hostBar" placeholder="Connection Address" 
                 required value={statefulHost} onChange={e => setHost(e.currentTarget.value)}
             />
-            <button type="submit" id="hostButton" onClick={fnChangeHost}>Connect</button>
+            <button id="hostButton" className="theme-button" onClick={fnChangeHost}>Connect</button>
         </div>
     );
 }
