@@ -11,3 +11,6 @@ find_package(GFlags     REQUIRED)
 
 add_executable(example_webcam example_webcam.cpp)
 target_link_libraries(example_webcam hastings ${OpenCV_LIBS} glog gflags)
+
+add_executable(example_websocket example_websocket.cpp)
+target_link_libraries(example_websocket hastings glog gflags)
