@@ -90,7 +90,6 @@ int main(int argc, char** argv) {
 
     pipeline->add<VideoCaptureNode>(0);
     pipeline->add<FrameDiffNode>();
-    pipeline->add<DisplayImageNode>();
     pipeline->add<VisualizerStreamerNode>();
 
     LOG(INFO) << "starting pipeline";
