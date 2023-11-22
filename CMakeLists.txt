@@ -28,6 +28,6 @@ target_link_libraries(test_hastings        GTest::gtest_main hastings)
 
 gtest_discover_tests(test_hastings)
 
-file(GLOB_RECURSE   all_cxx_files   hastings/*.cpp hastings/*.h tests/*.cpp tests/*.h)
+file(GLOB_RECURSE   all_cxx_files   hastings/*.cpp hastings/*.h tests/*.cpp tests/*.h examples/*.cpp)
 find_program(clang_format "clang-format")
 add_custom_target(format COMMAND ${clang_format} -i -style=file ${all_cxx_files})

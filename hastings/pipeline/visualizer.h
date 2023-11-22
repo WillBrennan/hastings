@@ -1,36 +1,17 @@
 #pragma once
 
-#include <condition_variable>
+#include <cstdint>
+#include <memory>
 #include <mutex>
-#include <nlohmann/json_fwd.hpp>
-#include <queue>
-#include <thread>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include "hastings/pipeline/node.h"
 
 namespace hastings {
 
-namespace detail {
-template <class T>
-void serialize(const T& value, nlohmann::json& json) = delete;
-
-template <class T>
-void deserialize(const nlohmann::json& json, T& value) = delete;
-
-template <>
-void serialize(const ImageContextInterface& context, nlohmann::json& json);
-
-template <>
-void deserialize(const nlohmann::json& json, ImageContextInterface& context);
-
-template <>
-void serialize(const MultiImageContextInterface& multi_context, nlohmann::json& json);
-
-template <>
-void deserialize(const nlohmann::json& json, MultiImageContextInterface& multi_context);
-
-}  // namespace detail
-
+class WebSocketServer;
 class VisualizerStreamerNode final : public NodeInterface {
   public:
     using Port = short unsigned int;
@@ -46,11 +27,13 @@ class VisualizerStreamerNode final : public NodeInterface {
   private:
     using Buffer = std::vector<std::uint8_t>;
 
-    std::jthread worker_;
-    std::condition_variable cv_;
-    std::mutex mutex_;
-    std::queue<Buffer> msg_queue_;
+    struct StreamConfig {
+        std::string camera;
+        std::string image;
+    };
 
-    void websocketThread(const Port port);
+    std::mutex mutex_;
+    std::optional<StreamConfig> stream_config_;
+    std::shared_ptr<WebSocketServer> server_;
 };
 }  // namespace hastings
