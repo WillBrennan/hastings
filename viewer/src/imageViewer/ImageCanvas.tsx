@@ -2,22 +2,31 @@ import React from "react";
 
 enum MouseState {
     Default,
-    Down, 
-    Dragging, 
+    Down,
+    Dragging,
 };
+
+export type Color = [number, number, number];
 
 export class ImageCanvas {
     private imageRef: React.RefObject<HTMLImageElement>;
     private canvasRef: React.RefObject<HTMLCanvasElement>;
     private divRef: React.RefObject<HTMLDivElement>;
+    private colorCallback: (color: Color) => void;
 
     private transform: DOMMatrix;
     private mouseState: MouseState;
 
-    constructor(imageRef: React.RefObject<HTMLImageElement>, canvasRef: React.RefObject<HTMLCanvasElement>, divRef: React.RefObject<HTMLDivElement>) {
+    constructor(
+        imageRef: React.RefObject<HTMLImageElement>,
+        canvasRef: React.RefObject<HTMLCanvasElement>,
+        divRef: React.RefObject<HTMLDivElement>,
+        colorCallback: (color: Color) => void) {
+
         this.imageRef = imageRef;
         this.canvasRef = canvasRef;
         this.divRef = divRef;
+        this.colorCallback = colorCallback;
 
         this.render = this.render.bind(this);
         this.updateFrame = this.updateFrame.bind(this);
@@ -71,7 +80,7 @@ export class ImageCanvas {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.setTransform(this.transform.a, this.transform.b, this.transform.c, this.transform.d, this.transform.e, this.transform.f);
-        ctx.drawImage(image, 0, 0, imageWidth, imageHeight);        
+        ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
         ctx.restore();
     }
 
@@ -93,10 +102,21 @@ export class ImageCanvas {
         }
 
         if (this.mouseState === MouseState.Dragging) {
-            const dX = event.movementX / this.transform.a; 
+            const dX = event.movementX / this.transform.a;
             const dY = event.movementY / this.transform.d;
             this.transform = this.transform.translate(dX, dY);
         }
+
+        const canvas = this.canvasRef.current;
+        const ctx = canvas?.getContext("2d");
+        if (ctx) {
+            const pixel = ctx.getImageData(event.offsetX, event.offsetY, 1, 1).data;
+            const color: Color = [pixel[0], pixel[1], pixel[2]];
+            this.colorCallback(color)
+        }
+        
+
+
     }
 
     private onMouseWheel(event: WheelEvent) {

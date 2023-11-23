@@ -13,10 +13,9 @@ The framework is highly modular and composable. It has visualization, performanc
 3. add visualizer 
    a. view all cameras 
    b. view all images 
+   c. zoom in image window
    d. only send whats being viewed
 ### Doing 
-3. add visualizer 
-   c. zoom in image window
 ### To Do  
 1. add draw commands to processors
 2. add settings to processors
