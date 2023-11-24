@@ -8,16 +8,19 @@ The framework is highly modular and composable. It has visualization, performanc
 
 ## To Do List 
 ### Done
-1. add image syntax to context...
-2. add remotery in processors for profiling
-3. add visualizer 
-   a. view all cameras 
-   b. view all images 
-   c. zoom in image window
-   d. only send whats being viewed
-4. add draw commands to processors
 ### Doing 
+
 ### To Do  
-5. add settings to processors
-6. add better support for single image processing...
-8. add support for CUDA / ML Inference
+#### day 1 
+5. add more unit-tests in C++
+6. add settings to processors
+7. add better support for single image processing...
+#### day 2 
+8. add playback control
+9. add events
+10. add 3D vector graphics
+#### day 3
+1. add support for CUDA / ML Inference
+#### day 4
+2.  add documentation + readme
+3.  add community code 
