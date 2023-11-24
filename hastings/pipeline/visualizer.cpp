@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <variant>
 #include <vector>
 
 #include "hastings/helpers/profile_marker.h"
@@ -11,7 +12,32 @@
 
 using nlohmann::json;
 
+// helper constant for the visitor #3
+template <class>
+inline constexpr bool always_false_v = false;
+
 namespace hastings {
+void to_json(json& j, const VectorGraphic& p) {
+    std::visit(
+        [&j](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, PointGraphic>) {
+                j = {{"type", "point"}, {"color", arg.color}, {"point", arg.point}};
+            } else if constexpr (std::is_same_v<T, LineGraphic>) {
+                j = {{"type", "line"}, {"color", arg.color}, {"start", arg.start}, {"end", arg.end}};
+            } else if constexpr (std::is_same_v<T, RectangleGraphic>) {
+                j = {{"type", "rectangle"}, {"color", arg.color}, {"topLeft", arg.topLeft}, {"bottomRight", arg.bottomRight}};
+            } else if constexpr (std::is_same_v<T, TextGraphic>) {
+                j = {{"type", "text"}, {"color", arg.color}, {"point", arg.point}, {"text", arg.text}};
+            } else {
+                static_assert(always_false_v<T>, "non-exhaustive visitor!");
+            }
+        },
+        p.graphic);
+}
+
+void from_json(const json& j, VectorGraphic& p) { throw std::runtime_error("not implemented!"); }
+
 VisualizerStreamerNode::VisualizerStreamerNode(const Port port) : server_(WebSocketServer::make(port)) {
     server_->messageHandler([this](const std::string& data) {
         const auto decoded = json::from_msgpack(data);
@@ -53,17 +79,21 @@ void VisualizerStreamerNode::process(MultiImageContextInterface& multi_context) 
         json["cameras"] = cameras;
         json["current"] = nullptr;
         json["image"] = nullptr;
+        json["graphics"] = nullptr;
 
         if (stream_config.has_value()) {
             const auto config = stream_config.value();
+            const auto context = multi_context.cameras(config.camera);
+            const auto image = context->image(config.image);
+            const auto& graphics = context->vectorGraphic(config.image);
 
-            const auto image = multi_context.cameras(config.camera)->image(config.image);
             std::vector<std::uint8_t> buffer;
             buffer.reserve(image.cols * image.rows);
             cv::imencode(".bmp", image, buffer);
 
             json["current"] = {{"camera", config.camera}, {"image", config.image}};
             json["image"] = json::binary_t(std::move(buffer));
+            json["graphics"] = graphics;
         }
     }
 

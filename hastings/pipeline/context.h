@@ -8,6 +8,8 @@
 #include <tuple>
 #include <vector>
 
+#include "hastings/pipeline/vector_graphic.h"
+
 namespace hastings {
 class ImageContextInterface {
   public:
@@ -31,6 +33,9 @@ class ImageContextInterface {
     virtual cv::Mat& image(const std::string& name) = 0;
     virtual void images(const FnImage& fn_image) = 0;
     virtual void images(const FnConstImage& fn_image) const = 0;
+
+    virtual void vectorGraphic(const std::string& image_name, std::vector<VectorGraphic>&& graphics) = 0;
+    virtual const std::vector<VectorGraphic>& vectorGraphic(const std::string& image_name) const = 0;
 
     template <class T>
     T& result(const std::string& name) {

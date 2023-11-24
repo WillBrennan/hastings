@@ -15,9 +15,9 @@ The framework is highly modular and composable. It has visualization, performanc
    b. view all images 
    c. zoom in image window
    d. only send whats being viewed
+4. add draw commands to processors
 ### Doing 
 ### To Do  
-1. add draw commands to processors
-2. add settings to processors
-3. add in-band signaling / serialization
-4. add support for CUDA / ML Inference
+5. add settings to processors
+6. add better support for single image processing...
+8. add support for CUDA / ML Inference
