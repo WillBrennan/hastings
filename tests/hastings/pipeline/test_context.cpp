@@ -75,8 +75,18 @@ TEST(ImageContext, time) {
     using hastings::createImageContext;
     const auto context = createImageContext();
 
-    context->time(12345);
-    EXPECT_EQ(context->time(), 12345);
+    const auto now = std::chrono::steady_clock::now();
+
+    context->time(now);
+    EXPECT_EQ(context->time(), now);
+}
+
+TEST(ImageContext, timeNotSet) {
+    using hastings::createImageContext;
+    using Time = hastings::ImageContextInterface::Time;
+
+    const auto context = createImageContext();
+    EXPECT_EQ(context->time(), Time());
 }
 
 TEST(ImageContext, ImageNew) {
@@ -238,14 +248,23 @@ TEST(MultiImageContext, frameId) {
 
     context->frameId(12345);
     EXPECT_EQ(context->frameId(), 12345);
+
+    for (const auto& camera : context->cameras()) {
+        EXPECT_EQ(std::get<1>(camera)->frameId(), 12345);
+    }
 }
 
 TEST(MultiImageContext, time) {
     using hastings::createMultiImageContext;
     const auto context = createMultiImageContext();
 
-    context->time(23456);
-    EXPECT_EQ(context->time(), 23456);
+    const auto now = std::chrono::steady_clock::now();
+    context->time(now);
+    EXPECT_EQ(context->time(), now);
+
+    for (const auto& camera : context->cameras()) {
+        EXPECT_EQ(std::get<1>(camera)->time(), now);
+    }
 }
 
 TEST(MultiImageContext, result) {

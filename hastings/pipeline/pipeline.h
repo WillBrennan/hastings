@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <thread>
 
@@ -18,7 +20,7 @@ class PipelineInterface {
         add(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    virtual void start() = 0;
+    virtual void start(const std::uint64_t num_frames = std::numeric_limits<std::uint64_t>::max()) = 0;
 };
 
 std::unique_ptr<PipelineInterface> createPipeline(const unsigned int num_threads = std::thread::hardware_concurrency());

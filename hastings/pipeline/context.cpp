@@ -16,8 +16,8 @@ class ImageContext : public ImageContextInterface {
         }
     }
 
-    void time(const std::size_t t) override final { time_ = t; }
-    std::size_t time() const override final { return time_; }
+    void time(Time t) override final { time_ = t; }
+    Time time() const override final { return time_; }
 
     void frameId(const std::size_t& id) override final { id_ = id; }
     std::size_t frameId() const override final { return id_; };
@@ -53,7 +53,7 @@ class ImageContext : public ImageContextInterface {
         std::vector<VectorGraphic> graphics;
     };
 
-    std::size_t time_;
+    Time time_;
     std::size_t id_;
 
     std::map<std::string, std::any> data_;
@@ -81,10 +81,21 @@ class MultiImageContext final : public MultiImageContextInterface {
         }
     }
 
-    void time(const std::size_t t) override final { context_.time(t); }
-    std::size_t time() const override final { return context_.time(); }
+    void time(const Time t) override final {
+        context_.time(t);
+        for (auto& camera : cameras_) {
+            std::get<1>(camera)->time(t);
+        }
+    }
 
-    void frameId(const std::size_t& id) override final { context_.frameId(id); }
+    Time time() const override final { return context_.time(); }
+
+    void frameId(const std::size_t& id) override final {
+        context_.frameId(id);
+        for (auto& camera : cameras_) {
+            std::get<1>(camera)->frameId(id);
+        }
+    }
     std::size_t frameId() const override final { return context_.frameId(); };
 
     std::any& result(const std::string& name) override final { return context_.result(name); }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <any>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <opencv2/core.hpp>
@@ -13,6 +14,8 @@
 namespace hastings {
 class ImageContextInterface {
   public:
+    using Clock = std::chrono::steady_clock;
+    using Time = Clock::time_point;
     using Ptr = std::unique_ptr<ImageContextInterface>;
     using FnImage = std::function<void(const std::string&, cv::Mat& image)>;
     using FnConstImage = std::function<void(const std::string&, const cv::Mat& image)>;
@@ -22,8 +25,9 @@ class ImageContextInterface {
 
     virtual void clear() = 0;
 
-    virtual void time(const std::size_t t) = 0;
-    virtual std::size_t time() const = 0;
+    void timeFromClock() { time(Clock::now()); }
+    virtual void time(Time t) = 0;
+    virtual Time time() const = 0;
 
     virtual void frameId(const std::size_t& id) = 0;
     virtual std::size_t frameId() const = 0;
