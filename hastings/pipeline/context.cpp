@@ -10,6 +10,10 @@ class ImageContext : public ImageContextInterface {
         for (auto& [key, value] : data_) {
             value.reset();
         }
+
+        for (auto& [key, data] : images_) {
+            data.graphics.clear();
+        }
     }
 
     void time(const std::size_t t) override final { time_ = t; }
@@ -20,25 +24,40 @@ class ImageContext : public ImageContextInterface {
 
     std::any& result(const std::string& name) override final { return data_[name]; }
 
-    cv::Mat& image(const std::string& name) override final { return images_[name]; }
+    cv::Mat& image(const std::string& name) override final { return images_[name].image; }
 
     void images(const FnImage& fn_image) override final {
         for (auto& [name, image] : images_) {
-            fn_image(name, image);
+            fn_image(name, image.image);
         }
     }
 
     void images(const FnConstImage& fn_image) const override final {
         for (auto& [name, image] : images_) {
-            fn_image(name, image);
+            fn_image(name, image.image);
         }
     }
 
+    void vectorGraphic(const std::string& image_name, std::vector<VectorGraphic>&& graphics) override final {
+        auto& image_data = images_[image_name];
+        image_data.graphics.insert(image_data.graphics.end(), graphics.begin(), graphics.end());
+    }
+
+    const std::vector<VectorGraphic>& vectorGraphic(const std::string& image_name) const override final {
+        return images_.at(image_name).graphics;
+    }
+
   private:
+    struct ImageData {
+        cv::Mat image;
+        std::vector<VectorGraphic> graphics;
+    };
+
     std::size_t time_;
     std::size_t id_;
+
     std::map<std::string, std::any> data_;
-    std::map<std::string, cv::Mat> images_;
+    std::map<std::string, ImageData> images_;
 };
 
 class MultiImageContext final : public MultiImageContextInterface {
@@ -55,7 +74,12 @@ class MultiImageContext final : public MultiImageContextInterface {
         return std::get<1>(value).get();
     }
 
-    void clear() override final { context_.clear(); }
+    void clear() override final {
+        context_.clear();
+        for (auto& camera : cameras_) {
+            std::get<1>(camera)->clear();
+        }
+    }
 
     void time(const std::size_t t) override final { context_.time(t); }
     std::size_t time() const override final { return context_.time(); }
@@ -70,6 +94,14 @@ class MultiImageContext final : public MultiImageContextInterface {
     void images(const FnImage& fn_image) override final { context_.images(fn_image); }
 
     void images(const FnConstImage& fn_image) const override final { context_.images(fn_image); }
+
+    void vectorGraphic(const std::string& image_name, std::vector<VectorGraphic>&& graphics) override final {
+        context_.vectorGraphic(image_name, std::move(graphics));
+    }
+
+    const std::vector<VectorGraphic>& vectorGraphic(const std::string& image_name) const override final {
+        return context_.vectorGraphic(image_name);
+    }
 
   private:
     Cameras cameras_;
