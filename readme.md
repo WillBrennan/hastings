@@ -9,10 +9,9 @@ The framework is highly modular and composable. It has visualization, performanc
 ## To Do List 
 ### Done
 ### Doing 
-
+5. add more unit-tests in C++
 ### To Do  
 #### day 1 
-5. add more unit-tests in C++
 6. add settings to processors
 7. add better support for single image processing...
 #### day 2 
