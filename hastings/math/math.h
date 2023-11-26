@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <algorithm>
 #include <cmath>
 #include <compare>

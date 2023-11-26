@@ -24,7 +24,7 @@ add_subdirectory(examples)
 
 file(GLOB_RECURSE   test_cxx_source_files           tests/*.cpp)
 add_executable(test_hastings               ${test_cxx_source_files})
-target_link_libraries(test_hastings        GTest::gtest_main hastings)
+target_link_libraries(test_hastings        GTest::gtest_main hastings GTest::gmock)
 
 gtest_discover_tests(test_hastings)
 

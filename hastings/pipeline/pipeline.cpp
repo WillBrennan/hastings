@@ -3,6 +3,7 @@
 #include <glog/logging.h>
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -37,19 +38,24 @@ class Pipeline final : public PipelineInterface {
         executors_.emplace_back(std::move(executor));
     };
 
-    void start() override final {
+    void start(const std::uint64_t num_frames) override final {
         ProfilerConnection profiler;
 
         std::vector<std::jthread> threads;
         threads.reserve(num_threads_);
 
         for (int idx = 0; idx < num_threads_; ++idx) {
-            threads.emplace_back([&] {
+            threads.emplace_back([this, num_frames] {
                 const auto context = createMultiImageContext();
 
                 while (true) {
+                    const auto frame_id = frame_id_++;
+                    if (frame_id >= num_frames) {
+                        return;
+                    }
+
                     context->clear();
-                    context->frameId(frame_id_++);
+                    context->frameId(frame_id);
 
                     ProfilerFunctionMarker marker_frame("frame");
 
@@ -70,7 +76,7 @@ class Pipeline final : public PipelineInterface {
 
     unsigned int num_threads_;
     std::vector<Executor> executors_;
-    std::atomic<int> frame_id_ = 0;
+    std::atomic<std::uint64_t> frame_id_ = 0;
 };
 
 std::unique_ptr<PipelineInterface> createPipeline(const unsigned int num_threads) { return std::make_unique<Pipeline>(num_threads); }

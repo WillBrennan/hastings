@@ -9,6 +9,9 @@ struct OrderedNode final : NodeInterface {
     std::string name() const override final;
 
     void process(MultiImageContextInterface& multi_context) override final;
+
+  private:
+    std::vector<int> frame_ordering_;
 };
 
 struct UnorderedNode final : NodeInterface {
@@ -17,6 +20,9 @@ struct UnorderedNode final : NodeInterface {
     std::string name() const override final;
 
     void process(MultiImageContextInterface& multi_context) override final;
+
+  private:
+    std::vector<int> frame_ordering_;
 };
 
 struct ParallelNode final : NodeInterface {

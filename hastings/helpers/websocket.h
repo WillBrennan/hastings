@@ -15,8 +15,6 @@ class WebSocketServer : public std::enable_shared_from_this<WebSocketServer> {
     using FnMessageHandler = std::function<void(const std::string&)>;
     using Ptr = std::shared_ptr<WebSocketServer>;
     using Port = short;
-    // todo
-    // 1. thread safety
 
     static Ptr make(const Port port);
 

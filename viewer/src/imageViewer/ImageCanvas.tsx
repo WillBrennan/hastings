@@ -128,8 +128,8 @@ export class ImageCanvas {
         ctx.font = `${Math.min(20 / scale, 5)}px Arial`;
 
         this.graphics.forEach(graphic => {
-            
             ctx.strokeStyle = `rgb(${graphic.color.map(v => v.toString()).join(",")})`;
+            ctx.fillStyle = ctx.strokeStyle;
         
             if (graphic.type === "line") {
                 const start = fnScaleToCanvas(graphic.start);
