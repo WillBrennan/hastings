@@ -87,7 +87,7 @@ class OpticalFlowNode final : public NodeInterface {
         cv::Mat& image_y = context->image("Y");
         cv::buildOpticalFlowPyramid(image_y, nextPyramid, cv::Size(21, 21), 3);
 
-        if (!prevPyramid_.empty()) {
+        if (!prevPyramid_.empty() && !prevPoints_.empty()) {
             std::vector<cv::Point2f> prevCVPts;
             prevCVPts.reserve(prevPoints_.size());
             std::transform(prevPoints_.begin(), prevPoints_.end(), std::back_inserter(prevCVPts),
