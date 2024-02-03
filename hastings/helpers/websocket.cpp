@@ -1,5 +1,7 @@
 #include "hastings/helpers/websocket.h"
 
+#include <utility>
+
 #include <glog/logging.h>
 
 #include <boost/asio.hpp>
