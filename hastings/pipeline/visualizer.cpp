@@ -67,7 +67,7 @@ void VisualizerStreamerNode::process(MultiImageContextInterface& multi_context) 
         for (const auto& [camera, context] : multi_context.cameras()) {
             auto& images = cameras[camera];
 
-            context->images([&images, &camera, &stream_config](const std::string& name, const cv::Mat& image) {
+            context->images([&images, camera=camera, &stream_config](const std::string& name, const cv::Mat& image) {
                 images.emplace_back(name);
 
                 if (!stream_config.has_value()) {
