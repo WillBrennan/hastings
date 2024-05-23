@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ceres/rotation.h>
-
 #include <cmath>
 
 #include "hastings/math/math.h"
@@ -27,6 +25,48 @@ struct RadialDistortion {
 
     Vec2s undistort(const Vec2s& pixel) const { throw std::runtime_error("error not implemented!"); }
 };
+
+
+template <typename T>
+Vec3<T> AngleAxisRotatePoint(const Vec3<T> angle_axis, const Vec3<T> pt) {
+    // copied from ceres to avoid bad includes
+  using std::fpclassify;
+  using std::hypot;
+
+  const T theta = hypot(angle_axis.x, angle_axis.y, angle_axis.z);
+
+  Vec3<T> result;
+
+  if (fpclassify(theta) != FP_ZERO) {
+    const T costheta = cos(theta);
+    const T sintheta = sin(theta);
+    const T theta_inverse = T(1.0) / theta;
+
+    const T w[3] = {angle_axis[0] * theta_inverse,
+                    angle_axis[1] * theta_inverse,
+                    angle_axis[2] * theta_inverse};
+
+    const T w_cross_pt[3] = {w[1] * pt[2] - w[2] * pt[1],
+                             w[2] * pt[0] - w[0] * pt[2],
+                             w[0] * pt[1] - w[1] * pt[0]};
+    const T tmp =
+        (w[0] * pt[0] + w[1] * pt[1] + w[2] * pt[2]) * (T(1.0) - costheta);
+
+    result[0] = pt[0] * costheta + w_cross_pt[0] * sintheta + w[0] * tmp;
+    result[1] = pt[1] * costheta + w_cross_pt[1] * sintheta + w[1] * tmp;
+    result[2] = pt[2] * costheta + w_cross_pt[2] * sintheta + w[2] * tmp;
+  } else {
+    const T w_cross_pt[3] = {angle_axis[1] * pt[2] - angle_axis[2] * pt[1],
+                             angle_axis[2] * pt[0] - angle_axis[0] * pt[2],
+                             angle_axis[0] * pt[1] - angle_axis[1] * pt[0]};
+
+    result[0] = pt[0] + w_cross_pt[0];
+    result[1] = pt[1] + w_cross_pt[1];
+    result[2] = pt[2] + w_cross_pt[2];
+  }
+
+  return result;
+}
 
 template <typename ScalarT>
 class Calib {
@@ -64,9 +104,7 @@ class Calib {
 
     Vec2s project(Vec3s point) const {
         point = point - trans_;
-
-        Vec3s point_in_cam;
-        ceres::AngleAxisRotatePoint(angle_axis_.data(), point.data(), point_in_cam.data());
+        const auto point_in_cam = AngleAxisRotatePoint(angle_axis_, point);
 
         const auto pixel_homogenous = Vec2s({point_in_cam.x, point_in_cam.y}) / point_in_cam.z;
 
@@ -85,8 +123,7 @@ class Calib {
 
         const auto inverse_angle_axis = Scalar(-1.0) * angle_axis_;
 
-        Vec3s point_in_world;
-        ceres::AngleAxisRotatePoint(inverse_angle_axis.data(), direction_cam_coords.data(), point_in_world.data());
+        const auto point_in_world = AngleAxisRotatePoint(inverse_angle_axis, direction_cam_coords);
         return point_in_world;
     }
 

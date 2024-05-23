@@ -1,8 +1,6 @@
 #pragma once
 
-#include <algorithm>
 #include <cmath>
-#include <compare>
 #include <cstdio>
 #include <ostream>
 
@@ -245,7 +243,11 @@ Mat<Scalar, DimI, DimK> matmul(const Mat<Scalar, DimI, DimJ>& lhs, const Mat<Sca
 template <typename Scalar, std::size_t DimRows, std::size_t DimCols>
 Mat<Scalar, DimRows, DimCols> abs(const Mat<Scalar, DimRows, DimCols>& mat) {
     auto result = Mat<Scalar, DimRows, DimCols>();
-    std::transform(mat.begin(), mat.end(), result.begin(), [](const Scalar& i) { return std::abs(i); });
+    
+    for (int i=0; i < DimRows * DimCols; ++i) {
+        result[i] = std::abs(mat[i]);
+    }
+
     return result;
 }
 
@@ -264,8 +266,13 @@ Mat<Scalar, DimRows, DimCols> transpose(const Mat<Scalar, DimRows, DimCols>& mat
 template <typename Scalar, std::size_t DimRows, std::size_t DimCols>
 bool near(const Mat<Scalar, DimRows, DimCols>& lhs, const Mat<Scalar, DimRows, DimCols>& rhs, const Scalar& epsilon) {
     const auto delta = abs(lhs - rhs);
-    const auto max_elem = *std::max_element(delta.begin(), delta.end());
-    return max_elem < epsilon;
+    Scalar max = delta[0];
+
+    for (int i=0; i < DimRows * DimCols; ++i) {
+        max = std::max(max, delta[i]);
+    }
+
+    return max < epsilon;
 }
 
 template <typename Scalar, std::size_t DimRows, std::size_t DimCols>
