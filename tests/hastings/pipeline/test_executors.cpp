@@ -3,6 +3,7 @@
 #include <hastings/pipeline/executors.h>
 
 #include <numeric>
+#include <thread>
 
 #include "helpers.h"
 
