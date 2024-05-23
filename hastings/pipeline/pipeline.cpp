@@ -41,7 +41,7 @@ class Pipeline final : public PipelineInterface {
     void start(const std::uint64_t num_frames) override final {
         ProfilerConnection profiler;
 
-        std::vector<std::jthread> threads;
+        std::vector<std::thread> threads;
         threads.reserve(num_threads_);
 
         for (int idx = 0; idx < num_threads_; ++idx) {

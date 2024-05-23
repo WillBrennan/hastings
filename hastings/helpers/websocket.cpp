@@ -44,7 +44,9 @@ struct WebSocketServer::Storage {
     boost::asio::ip::tcp::socket socket_;
     std::vector<std::shared_ptr<WebSocketSession>> sessions_;
     FnMessageHandler messageHandler_;
-    std::jthread thread_io_;
+    std::thread thread_io_;
+
+    ~Storage() { thread_io_.join(); }
 };
 
 WebSocketSession::WebSocketSession(boost::asio::ip::tcp::socket socket)
@@ -126,7 +128,7 @@ void WebSocketServer::start() {
     std::lock_guard lock(mutex_);
 
     auto self = shared_from_this();
-    storage_->thread_io_ = std::jthread([self] {
+    storage_->thread_io_ = std::thread([self] {
         self->accept();
         self->storage_->ioContext_.run();
     });
