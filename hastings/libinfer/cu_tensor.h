@@ -23,9 +23,7 @@ struct CudaTensor {
         return 0;
     }
 
-    __device__ T& operator()(const int n, const int c, const int y, const int x) __restrict__ {
-        return data[index(n, c, y, x)];
-    }
+    __device__ T& operator()(const int n, const int c, const int y, const int x) __restrict__ { return data[index(n, c, y, x)]; }
     __device__ const T& operator()(const int n, const int c, const int y, const int x) const __restrict__ {
         return data[index(n, c, y, x)];
     }

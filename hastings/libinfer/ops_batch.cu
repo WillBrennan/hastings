@@ -5,8 +5,8 @@
 
 namespace libinfer {
 namespace detail {
-__global__ void cropKernel(CudaTensor<const unsigned char, Ordering::NHWC> cu_image_bgr, Crop* cu_crops,
-                           const int num_crops, CudaTensor<unsigned char, Ordering::NHWC> cu_image_crops) {
+__global__ void cropKernel(CudaTensor<const unsigned char, Ordering::NHWC> cu_image_bgr, Crop* cu_crops, const int num_crops,
+                           CudaTensor<unsigned char, Ordering::NHWC> cu_image_crops) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     const int nc = blockIdx.z * blockDim.z + threadIdx.z;
@@ -50,8 +50,7 @@ __global__ void cropKernel(CudaTensor<const unsigned char, Ordering::NHWC> cu_im
 }
 }  // namespace detail
 
-void cropFromImage(const Tensor& image_bgr, const std::vector<Crop>& crops, const int maxCrops, const int cropWidth,
-                   Tensor& crops_image) {
+void cropFromImage(const Tensor& image_bgr, const std::vector<Crop>& crops, const int maxCrops, const int cropWidth, Tensor& crops_image) {
     CHECK(image_bgr.type() == Type::UINT8) << "images must be uint8";
     CHECK(image_bgr.device() == Device::CUDA) << "images must be on CUDA";
     CHECK(image_bgr.shape().order == Ordering::NHWC) << "images must be NHWC";

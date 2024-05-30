@@ -36,8 +36,7 @@ struct Model::Impl {
     EnginePtr engine;
     ContextPtr context;
 
-    Impl(const Path& onnx_path, const bool use_fp16, const std::vector<Tensor>& inputs,
-         const Index explicit_batch_size) {
+    Impl(const Path& onnx_path, const bool use_fp16, const std::vector<Tensor>& inputs, const Index explicit_batch_size) {
         using BuilderPtr = std::unique_ptr<nvinfer1::IBuilder>;
         using NetworkPtr = std::unique_ptr<nvinfer1::INetworkDefinition>;
         using ParserPtr = std::unique_ptr<nvonnxparser::IParser>;
@@ -69,9 +68,7 @@ struct Model::Impl {
             CHECK(builder != nullptr) << "failed to create builder";
 
             const auto flags =
-                explicit_batch_size > 0
-                    ? 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH)
-                    : 0U;
+                explicit_batch_size > 0 ? 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH) : 0U;
             NetworkPtr network(builder->createNetworkV2(flags));
             CHECK(network != nullptr) << "failed to create network";
 
@@ -121,8 +118,7 @@ struct Model::Impl {
             auto in_stream = std::ifstream(engine_path, std::ios::binary);
             CHECK(in_stream) << "failed to read engine";
 
-            serialized_model =
-                std::string((std::istreambuf_iterator<char>(in_stream)), std::istreambuf_iterator<char>());
+            serialized_model = std::string((std::istreambuf_iterator<char>(in_stream)), std::istreambuf_iterator<char>());
             in_stream.close();
         }
 
@@ -179,8 +175,7 @@ void Model::forward(std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
         auto dims = engine.getTensorShape(name);
 
         if (create_outputs) {
-            Shape shape{Ordering::NCHW, dims.d[0], dims.d[1], std::max(Index(1), dims.d[2]),
-                        std::max(Index(1), dims.d[3])};
+            Shape shape{Ordering::NCHW, dims.d[0], dims.d[1], std::max(Index(1), dims.d[2]), std::max(Index(1), dims.d[3])};
             outputs.emplace_back(Tensor(shape, Device::CUDA, Type::FLOAT32));
         }
 

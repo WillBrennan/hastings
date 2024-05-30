@@ -8,8 +8,7 @@ namespace libinfer {
 namespace detail {
 __device__ float sigmoid(const float x) { return 1.0f / (1.0f + __expf(-x)); }
 
-__device__ void subPixelPeak(const CudaTensor<const float, Ordering::NCHW> logits, const int y, const int x,
-                             Peak& peak) {
+__device__ void subPixelPeak(const CudaTensor<const float, Ordering::NCHW> logits, const int y, const int x, Peak& peak) {
     const auto x1 = logits(peak.n, peak.c, y, x);
     const auto y1 = x1;
 
@@ -28,8 +27,8 @@ __device__ void subPixelPeak(const CudaTensor<const float, Ordering::NCHW> logit
 }
 
 template <int num_c>
-__global__ void preprocessKernel(const CudaTensor<const unsigned char, Ordering::NHWC> image,
-                                 const Normalize<num_c> norm, CudaTensor<float, Ordering::NCHW> output) {
+__global__ void preprocessKernel(const CudaTensor<const unsigned char, Ordering::NHWC> image, const Normalize<num_c> norm,
+                                 CudaTensor<float, Ordering::NCHW> output) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     const int n = blockIdx.z * blockDim.z + threadIdx.z;
@@ -59,8 +58,7 @@ __global__ void sigmoidKernel(detail::CudaTensor<float, Ordering::NCHW> logits) 
     }
 }
 
-__global__ void maskFromProbsKernel(const CudaTensor<const float, Ordering::NCHW> probs,
-                                    CudaTensor<unsigned char, Ordering::NHWC> image) {
+__global__ void maskFromProbsKernel(const CudaTensor<const float, Ordering::NCHW> probs, CudaTensor<unsigned char, Ordering::NHWC> image) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     const int n = blockIdx.z * blockDim.z + threadIdx.z;
@@ -74,8 +72,7 @@ __global__ void maskFromProbsKernel(const CudaTensor<const float, Ordering::NCHW
     }
 }
 
-__global__ void colorByProbsKernel(const CudaTensor<const float, Ordering::NCHW> probs,
-                                   CudaTensor<unsigned char, Ordering::NHWC> image) {
+__global__ void colorByProbsKernel(const CudaTensor<const float, Ordering::NCHW> probs, CudaTensor<unsigned char, Ordering::NHWC> image) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     const int n = blockIdx.z * blockDim.z + threadIdx.z;
@@ -85,8 +82,7 @@ __global__ void colorByProbsKernel(const CudaTensor<const float, Ordering::NCHW>
     }
 
     float color[3] = {0, 0, 0};
-    const unsigned char colors[6][3] = {{255, 0, 0},   {0, 255, 0},   {0, 0, 255},
-                                        {255, 255, 0}, {255, 0, 255}, {0, 255, 255}};
+    const unsigned char colors[6][3] = {{255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {0, 255, 255}};
 
     for (int c = 0; c < probs.c; ++c) {
         const auto prob = probs(n, c, y, x);
@@ -102,8 +98,8 @@ __global__ void colorByProbsKernel(const CudaTensor<const float, Ordering::NCHW>
 }
 
 template <class Fn>
-__global__ void findPeaksKernel(const CudaTensor<const float, Ordering::NCHW> logits, const float threshold,
-                                int* num_peaks, const int max_num_peaks, Fn fn) {
+__global__ void findPeaksKernel(const CudaTensor<const float, Ordering::NCHW> logits, const float threshold, int* num_peaks,
+                                const int max_num_peaks, Fn fn) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x + 1;
     const int y = blockIdx.y * blockDim.y + threadIdx.y + 1;
     const int nc = blockIdx.z * blockDim.z + threadIdx.z;
@@ -186,12 +182,10 @@ int findPeaks(const Tensor& logits, const float min_confidence, const std::size_
     auto cu_logits = detail::CudaTensor<const float, Ordering::NCHW>(logits);
 
     dim3 threadsPerBlock(32, 32, 1);
-    dim3 numBlocks((cu_logits.w + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (cu_logits.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
+    dim3 numBlocks((cu_logits.w + threadsPerBlock.x - 1) / threadsPerBlock.x, (cu_logits.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (cu_logits.n * cu_logits.c + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-    detail::findPeaksKernel<Fn>
-        <<<numBlocks, threadsPerBlock>>>(cu_logits, min_confidence, num_peaks_d, max_peaks, helper);
+    detail::findPeaksKernel<Fn><<<numBlocks, threadsPerBlock>>>(cu_logits, min_confidence, num_peaks_d, max_peaks, helper);
     cudaDeviceSynchronize();
 
     int num_peaks_h = 0;
@@ -230,20 +224,15 @@ void preprocessImpl(const Tensor& images, const Normalize<c> norm, Tensor& outpu
     auto cu_output = detail::CudaTensor<float, Ordering::NCHW>(output);
 
     dim3 threadsPerBlock(32, 32, 1);
-    dim3 numBlocks((cu_image.w + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (cu_image.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
+    dim3 numBlocks((cu_image.w + threadsPerBlock.x - 1) / threadsPerBlock.x, (cu_image.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (cu_image.n + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
     detail::preprocessKernel<c><<<numBlocks, threadsPerBlock>>>(cu_image, norm, cu_output);
 }
 
-void preprocess(const Tensor& images, const Normalize<1> norm, Tensor& output) {
-    preprocessImpl<1>(images, norm, output);
-}
+void preprocess(const Tensor& images, const Normalize<1> norm, Tensor& output) { preprocessImpl<1>(images, norm, output); }
 
-void preprocess(const Tensor& images, const Normalize<3> norm, Tensor& output) {
-    preprocessImpl<3>(images, norm, output);
-}
+void preprocess(const Tensor& images, const Normalize<3> norm, Tensor& output) { preprocessImpl<3>(images, norm, output); }
 
 void sigmoid(Tensor& logits) {
     CHECK(logits.type() == Type::FLOAT32) << "logits must be float32";
@@ -254,8 +243,7 @@ void sigmoid(Tensor& logits) {
     auto cu_logits = detail::CudaTensor<float, Ordering::NCHW>(logits);
 
     dim3 threadsPerBlock(32, 32);
-    dim3 numBlocks((shape.w + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (shape.h + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((shape.w + threadsPerBlock.x - 1) / threadsPerBlock.x, (shape.h + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     detail::sigmoidKernel<<<numBlocks, threadsPerBlock>>>(cu_logits);
 
@@ -276,8 +264,7 @@ void maskFromProbs(const Tensor& probs, Tensor& image) {
     CHECK_EQ(cu_image.c, cu_probs.c);
 
     dim3 threadsPerBlock(32, 32, 1);
-    dim3 numBlocks((cu_probs.w + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (cu_probs.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
+    dim3 numBlocks((cu_probs.w + threadsPerBlock.x - 1) / threadsPerBlock.x, (cu_probs.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (cu_probs.n + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
     detail::maskFromProbsKernel<<<numBlocks, threadsPerBlock>>>(cu_probs, cu_image);
@@ -295,15 +282,13 @@ void colorByProbs(const Tensor& probs, Tensor& image) {
     const auto cu_probs = detail::CudaTensor<const float, Ordering::NCHW>(probs);
 
     dim3 threadsPerBlock(32, 32, 1);
-    dim3 numBlocks((cu_probs.w + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (cu_probs.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
+    dim3 numBlocks((cu_probs.w + threadsPerBlock.x - 1) / threadsPerBlock.x, (cu_probs.h + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (cu_probs.n + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
     detail::colorByProbsKernel<<<numBlocks, threadsPerBlock>>>(cu_probs, cu_image);
 }
 
-void peakFinding(const Tensor& logits, const float min_confidence, const std::size_t max_peaks,
-                 std::vector<Peak>& peaks) {
+void peakFinding(const Tensor& logits, const float min_confidence, const std::size_t max_peaks, std::vector<Peak>& peaks) {
     Peak* cu_peaks = nullptr;
     cudaMalloc(&cu_peaks, sizeof(Peak) * max_peaks);
 
@@ -318,8 +303,8 @@ void peakFinding(const Tensor& logits, const float min_confidence, const std::si
     cudaDeviceSynchronize();
 }
 
-void objectsAsPoints(const Tensor& logits, const Tensor& shapes, const float min_confidence,
-                     const std::size_t max_detections, std::vector<Detection>& detections) {
+void objectsAsPoints(const Tensor& logits, const Tensor& shapes, const float min_confidence, const std::size_t max_detections,
+                     std::vector<Detection>& detections) {
     CHECK(shapes.type() == Type::FLOAT32) << "shapes must be float32";
     CHECK(shapes.device() == Device::CUDA) << "shapes must be on CUDA";
     CHECK(shapes.shape().order == Ordering::NCHW) << "shapes must be NCHW";

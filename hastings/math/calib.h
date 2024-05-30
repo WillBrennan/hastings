@@ -14,7 +14,7 @@ struct RadialDistortion {
     Scalar k2 = Scalar(0.0);
     Scalar k3 = Scalar(0.0);
 
-    Vec2s distort(const Vec2s& pixel) const {
+    CUDA_HOST_DEVICE Vec2s distort(const Vec2s& pixel) const {
         const auto r2 = squaredLength(pixel);
         const auto r4 = r2 * r2;
         const auto r6 = r4 * r2;
@@ -23,49 +23,42 @@ struct RadialDistortion {
         return pixel * scale;
     }
 
-    Vec2s undistort(const Vec2s& pixel) const { throw std::runtime_error("error not implemented!"); }
+    CUDA_HOST_DEVICE Vec2s undistort(const Vec2s& pixel) const { throw std::runtime_error("error not implemented!"); }
 };
 
-
 template <typename T>
-Vec3<T> AngleAxisRotatePoint(const Vec3<T> angle_axis, const Vec3<T> pt) {
-    // copied from ceres to avoid bad includes
-  using std::fpclassify;
-  using std::hypot;
+CUDA_HOST_DEVICE Vec3<T> RollPitchYawRotatePoint(const Vec3<T> rpy, const Vec3<T> pt, const bool inverse) {
+    T cosRoll = cos(rpy.x);
+    T sinRoll = sin(rpy.x);
+    T cosPitch = cos(rpy.y);
+    T sinPitch = sin(rpy.y);
+    T cosYaw = cos(rpy.z);
+    T sinYaw = sin(rpy.z);
 
-  const T theta = hypot(angle_axis.x, angle_axis.y, angle_axis.z);
+    T R11 = cosYaw * cosPitch;
+    T R12 = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
+    T R13 = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
 
-  Vec3<T> result;
+    T R21 = sinYaw * cosPitch;
+    T R22 = sinYaw * sinPitch * sinRoll + cosYaw * cosRoll;
+    T R23 = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
 
-  if (fpclassify(theta) != FP_ZERO) {
-    const T costheta = cos(theta);
-    const T sintheta = sin(theta);
-    const T theta_inverse = T(1.0) / theta;
+    T R31 = -sinPitch;
+    T R32 = cosPitch * sinRoll;
+    T R33 = cosPitch * cosRoll;
 
-    const T w[3] = {angle_axis[0] * theta_inverse,
-                    angle_axis[1] * theta_inverse,
-                    angle_axis[2] * theta_inverse};
+    if (inverse) {
+        std::swap(R12, R21);
+        std::swap(R13, R31);
+        std::swap(R23, R32);
+    }
 
-    const T w_cross_pt[3] = {w[1] * pt[2] - w[2] * pt[1],
-                             w[2] * pt[0] - w[0] * pt[2],
-                             w[0] * pt[1] - w[1] * pt[0]};
-    const T tmp =
-        (w[0] * pt[0] + w[1] * pt[1] + w[2] * pt[2]) * (T(1.0) - costheta);
+    Vec3<T> result;
+    result.x = R11 * pt.x + R12 * pt.y + R13 * pt.z;
+    result.y = R21 * pt.x + R22 * pt.y + R23 * pt.z;
+    result.z = R31 * pt.x + R32 * pt.y + R33 * pt.z;
 
-    result[0] = pt[0] * costheta + w_cross_pt[0] * sintheta + w[0] * tmp;
-    result[1] = pt[1] * costheta + w_cross_pt[1] * sintheta + w[1] * tmp;
-    result[2] = pt[2] * costheta + w_cross_pt[2] * sintheta + w[2] * tmp;
-  } else {
-    const T w_cross_pt[3] = {angle_axis[1] * pt[2] - angle_axis[2] * pt[1],
-                             angle_axis[2] * pt[0] - angle_axis[0] * pt[2],
-                             angle_axis[0] * pt[1] - angle_axis[1] * pt[0]};
-
-    result[0] = pt[0] + w_cross_pt[0];
-    result[1] = pt[1] + w_cross_pt[1];
-    result[2] = pt[2] + w_cross_pt[2];
-  }
-
-  return result;
+    return result;
 }
 
 template <typename ScalarT>
@@ -79,32 +72,27 @@ class Calib {
 
     // NOTE(will.brennan): by default; cameras point up along the z-axis
 
-    Calib(const Vec3s& trans, const Vec3s& _angle_axis, const Vec2s& center, Scalar focal_length, Scalar aspect_ratio,
-          const Distortion& distortion)
-        : trans_(trans),
-          angle_axis_(_angle_axis),
-          center_(center),
-          focal_length_(focal_length),
-          aspect_ratio_(aspect_ratio),
-          distortion_(distortion) {}
+    CUDA_HOST_DEVICE Calib(const Vec3s& trans, const Vec3s& _rpy, const Vec2s& center, Scalar focal_length, Scalar aspect_ratio,
+                           const Distortion& distortion)
+        : trans_(trans), rpy_(_rpy), center_(center), focal_length_(focal_length), aspect_ratio_(aspect_ratio), distortion_(distortion) {}
 
-    const Vec3s& trans() const { return trans_; }
-    const Vec3s& angleAxis() const { return angle_axis_; }
-    const Scalar& focalLength() const { return focal_length_; }
-    const Scalar& aspectRatio() const { return aspect_ratio_; }
-    const Vec2s& center() const { return center_; }
-    const Distortion& distortion() const { return distortion_; }
+    CUDA_HOST_DEVICE const Vec3s& trans() const { return trans_; }
+    CUDA_HOST_DEVICE const Vec3s& rollPitchYaw() const { return rpy_; }
+    CUDA_HOST_DEVICE const Scalar& focalLength() const { return focal_length_; }
+    CUDA_HOST_DEVICE const Scalar& aspectRatio() const { return aspect_ratio_; }
+    CUDA_HOST_DEVICE const Vec2s& center() const { return center_; }
+    CUDA_HOST_DEVICE const Distortion& distortion() const { return distortion_; }
 
-    Vec3s& trans() { return trans_; }
-    Vec3s& angleAxis() { return angle_axis_; }
-    Scalar& focalLength() { return focal_length_; }
-    Scalar& aspectRatio() { return aspect_ratio_; }
-    Vec2s& center() { return center_; }
-    Distortion& distortion() { return distortion_; }
+    CUDA_HOST_DEVICE Vec3s& trans() { return trans_; }
+    CUDA_HOST_DEVICE Vec3s& rollPitchYaw() { return rpy_; }
+    CUDA_HOST_DEVICE Scalar& focalLength() { return focal_length_; }
+    CUDA_HOST_DEVICE Scalar& aspectRatio() { return aspect_ratio_; }
+    CUDA_HOST_DEVICE Vec2s& center() { return center_; }
+    CUDA_HOST_DEVICE Distortion& distortion() { return distortion_; }
 
-    Vec2s project(Vec3s point) const {
+    CUDA_HOST_DEVICE Vec2s project(Vec3s point) const {
         point = point - trans_;
-        const auto point_in_cam = AngleAxisRotatePoint(angle_axis_, point);
+        const auto point_in_cam = RollPitchYawRotatePoint(rpy_, point, false);
 
         const auto pixel_homogenous = Vec2s({point_in_cam.x, point_in_cam.y}) / point_in_cam.z;
 
@@ -115,22 +103,19 @@ class Calib {
         return pixel;
     }
 
-    Vec3s direction(const Vec2s pixel) const {
+    CUDA_HOST_DEVICE Vec3s direction(const Vec2s pixel) const {
         auto pixel_homogenous = distortion_.undistort(pixel - center_) / focal_length_;
         pixel_homogenous.y /= aspect_ratio_;
 
         auto direction_cam_coords = Vec3s({pixel_homogenous.x, pixel_homogenous.y, Scalar(1.0)});
-
-        const auto inverse_angle_axis = Scalar(-1.0) * angle_axis_;
-
-        const auto point_in_world = AngleAxisRotatePoint(inverse_angle_axis, direction_cam_coords);
+        const auto point_in_world = RollPitchYawRotatePoint(rpy_, direction_cam_coords, true);
         return point_in_world;
     }
 
   private:
     // NOTE(will.brennan): we care about memory ordering due to ceres optimization
     Vec3s trans_;
-    Vec3s angle_axis_;
+    Vec3s rpy_;
     Vec2s center_;
     Scalar focal_length_;
     Scalar aspect_ratio_;
@@ -141,7 +126,7 @@ class Calib {
 using Calibd = Calib<double>;
 
 template <typename Scalar>
-Vec3<Scalar> pixelInZ(const Calib<Scalar>& calib, const Vec2<Scalar>& pixel, const Scalar& z) {
+CUDA_HOST_DEVICE Vec3<Scalar> pixelInZ(const Calib<Scalar>& calib, const Vec2<Scalar>& pixel, const Scalar& z) {
     const auto direction = calib.direction(pixel);
     const auto t = (z - calib.trans().z) / direction.z;
     return calib.trans() + direction * t;
@@ -150,7 +135,7 @@ Vec3<Scalar> pixelInZ(const Calib<Scalar>& calib, const Vec2<Scalar>& pixel, con
 template <typename Scalar>
 std::ostream& operator<<(std::ostream& stream, const Calib<Scalar>& calib) {
     stream << "{ trans: " << calib.trans();
-    stream << ", angle-axis: " << calib.angleAxis();
+    stream << ", rpy: " << calib.rollPitchYaw();
     stream << ", center: " << calib.center();
     stream << ", focal length: " << calib.focalLength();
     stream << ", aspect ratio: " << calib.aspectRatio();

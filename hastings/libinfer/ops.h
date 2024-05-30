@@ -39,11 +39,10 @@ void maskFromProbs(const Tensor& probs, Tensor& image);
 
 void colorByProbs(const Tensor& probs, Tensor& image);
 
-void peakFinding(const Tensor& logits, const float min_confidence, const std::size_t max_peaks,
-                 std::vector<Peak>& peaks);
+void peakFinding(const Tensor& logits, const float min_confidence, const std::size_t max_peaks, std::vector<Peak>& peaks);
 
-void objectsAsPoints(const Tensor& logits, const Tensor& shapes, const float min_confidence,
-                     const std::size_t max_detections, std::vector<Detection>& detections);
+void objectsAsPoints(const Tensor& logits, const Tensor& shapes, const float min_confidence, const std::size_t max_detections,
+                     std::vector<Detection>& detections);
 
 // need imageBatch from detections for pose estimation...
 

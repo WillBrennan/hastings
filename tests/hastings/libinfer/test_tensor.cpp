@@ -1,6 +1,6 @@
-#include <hastings/libinfer/tensor.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <hastings/libinfer/tensor.h>
 
 TEST(Shape, Construction) {
     using libinfer::Ordering;

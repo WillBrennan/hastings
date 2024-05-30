@@ -1,12 +1,11 @@
 #include "hastings/helpers/websocket.h"
 
-#include <utility>
-
 #include <glog/logging.h>
 
 #include <boost/asio.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+#include <utility>
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
