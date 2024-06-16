@@ -11,19 +11,22 @@ struct RadialDistortion {
     using Vec2s = Vec2<Scalar>;
 
     Scalar k1 = Scalar(0.0);
-    Scalar k2 = Scalar(0.0);
-    Scalar k3 = Scalar(0.0);
 
     CUDA_HOST_DEVICE Vec2s distort(const Vec2s& pixel) const {
-        const auto r2 = squaredLength(pixel);
-        const auto r4 = r2 * r2;
-        const auto r6 = r4 * r2;
-        const auto scale = Scalar(1.0) + k1 * r2 + k2 * r4 + k3 * r6;
+        // https://www.robots.ox.ac.uk/~lav/Papers/tordoff_murray_cviu2004/tordoff_murray_cviu2004.pdf
+        const Scalar dis2 = squaredLength(pixel);
+        const Scalar ratio = sqrt(Scalar(1.0) - Scalar(2.0) * k1 * dis2);
 
-        return pixel * scale;
+        return pixel / ratio;
     }
 
-    CUDA_HOST_DEVICE Vec2s undistort(const Vec2s& pixel) const { throw std::runtime_error("error not implemented!"); }
+    CUDA_HOST_DEVICE Vec2s undistort(const Vec2s& pixel) const {
+        // https://www.robots.ox.ac.uk/~lav/Papers/tordoff_murray_cviu2004/tordoff_murray_cviu2004.pdf
+
+        const Scalar dis2 = squaredLength(pixel);
+        const Scalar ratio = sqrt(Scalar(1.0) + Scalar(2.0) * k1 * dis2);
+        return pixel / ratio;
+    }
 };
 
 template <typename T>
@@ -103,9 +106,11 @@ class Calib {
         return pixel;
     }
 
-    CUDA_HOST_DEVICE Vec3s direction(const Vec2s pixel) const {
-        auto pixel_homogenous = distortion_.undistort(pixel - center_) / focal_length_;
-        pixel_homogenous.y /= aspect_ratio_;
+    CUDA_HOST_DEVICE Vec3s direction(Vec2s pixel) const {
+        pixel = pixel - center_;
+        pixel.y /= aspect_ratio_;
+
+        auto pixel_homogenous = distortion_.undistort(pixel) / focal_length_;
 
         auto direction_cam_coords = Vec3s({pixel_homogenous.x, pixel_homogenous.y, Scalar(1.0)});
         const auto point_in_world = RollPitchYawRotatePoint(rpy_, direction_cam_coords, true);
