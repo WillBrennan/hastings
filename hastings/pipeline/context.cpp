@@ -12,6 +12,7 @@ class ImageContext : public ImageContextInterface {
         }
 
         for (auto& [key, data] : images_) {
+            data.image = cv::Mat();
             data.graphics.clear();
         }
     }
