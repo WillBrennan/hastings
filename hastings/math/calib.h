@@ -110,7 +110,11 @@ class Calib {
         pixel = pixel - center_;
         pixel.y /= aspect_ratio_;
 
-        auto pixel_homogenous = distortion_.undistort(pixel) / focal_length_;
+        // Undistort the focal-normalised coordinate, because that is what project() distorted.
+        // Undistorting the raw pixel offset instead makes direction() disagree with project() by a
+        // factor of the focal length: harmless when k1 is 0, since undistort is then the identity,
+        // and NaN otherwise once 1 + 2*k1*|pixel|^2 goes negative at pixel scale.
+        auto pixel_homogenous = distortion_.undistort(pixel / focal_length_);
 
         auto direction_cam_coords = Vec3s({pixel_homogenous.x, pixel_homogenous.y, Scalar(1.0)});
         const auto point_in_world = RollPitchYawRotatePoint(rpy_, direction_cam_coords, true);
@@ -145,8 +149,6 @@ std::ostream& operator<<(std::ostream& stream, const Calib<Scalar>& calib) {
     stream << ", focal length: " << calib.focalLength();
     stream << ", aspect ratio: " << calib.aspectRatio();
     stream << ", k1: " << calib.distortion().k1;
-    stream << ", k2: " << calib.distortion().k2;
-    stream << ", k3: " << calib.distortion().k3;
     stream << "}";
     return stream;
 }
